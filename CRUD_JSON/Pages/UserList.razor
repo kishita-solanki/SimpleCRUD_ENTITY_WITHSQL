@@ -1,0 +1,89 @@
+﻿@page "/userlist"
+
+@using CRUD_JSON.Model;
+@using CRUD_JSON.Services;
+@using System.Text
+@inject UserServices userservices;
+@inject NavigationManager NavigationManager
+
+<EditForm Model="userrequest" OnValidSubmit="SearchData">
+    <div class="form-container">
+        <div class="form-group">
+            <h3>User List</h3>
+        </div>
+
+        <div class="form-group">
+            <label for="Id">ID</label>
+            <InputNumber id="Id" @bind-Value="@userrequest.Id" class="form-control" placeholder="Id" />
+        </div>
+
+        <div class="form-group">
+            <button type="submit" class="btn btn-primary">Search</button>
+        </div>
+    </div>
+
+    <div>
+        @if (user != null)
+        {
+            <table class="table table-bordered table-hover">
+                <thead class="thead-light">
+                    <tr>
+                        <th scope="col">Id</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Email</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in user)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td>@item.Name</td>
+                            <td>@item.Email</td>
+                            <td>
+                                <div class="form-group">
+                                    <button class="btn btn-secondary" @onclick="() => EditData(item.Id,item.Name,item.Email)">Edit</button>
+                                    <button class="btn btn-secondary" @onclick="() => DeleteData(item.Id,item.Name)">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <h3>No Data</h3>
+        }
+    </div>
+</EditForm>
+
+
+
+@code {
+    User userrequest = new User();
+    private List<User> user = new List<User>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        user = await userservices.GetUserAllData();
+    }
+
+    public async Task SearchData()
+    {
+        user = await userservices.GetUser(userrequest.Id);
+    }
+
+    public async Task EditData(int id, string name, string email)
+    {
+        User currentUser = new User { Id = id, Name = name, Email = email};
+        string userJson = System.Text.Json.JsonSerializer.Serialize(currentUser);
+        NavigationManager.NavigateTo($"/adduser/{Convert.ToBase64String(Encoding.UTF8.GetBytes(userJson))}");
+    }
+
+    public void DeleteData(int id, string name)
+    {
+        userservices.DeleteUser(id,name);
+        NavigationManager.NavigateTo("/userlist", true);
+    }
+}

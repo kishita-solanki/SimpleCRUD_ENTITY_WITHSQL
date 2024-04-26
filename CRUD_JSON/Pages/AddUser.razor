@@ -1,0 +1,103 @@
+﻿@page "/adduser"
+@page "/adduser/{userjson}"
+
+@using CRUD_JSON.Model;
+@using CRUD_JSON.Services;
+@using System.Text
+
+@inject UserServices userservices;
+@inject NavigationManager NavigationManager
+
+@if (userjson != null)
+{
+    <EditForm Model="user" OnValidSubmit="Updateusers">
+        <div class="form-container">
+            <div class="form-group">
+                    <h3>Update User</h3>
+            </div>
+
+            <div class="form-group">
+                <label for="Id">ID</label>
+                <InputNumber id="Id" @bind-Value="@user.Id" class="form-control" placeholder="Id" />
+            </div>
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <InputText id="name" @bind-Value="@user.Name" class="form-control" placeholder="Name" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="@user.Email" class="form-control" placeholder="Email" />
+            </div>
+
+            <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Update User</button>
+            </div>
+        </div>
+    </EditForm>
+}
+else
+{
+    <EditForm Model="user" OnValidSubmit="AddUsers">
+        <div class="form-container">
+            <div class="form-group">
+                <h3>Add User</h3>
+            </div>
+
+            <div class="form-group">
+                <label for="Id">ID</label>
+                <InputNumber id="Id" @bind-Value="@user.Id" class="form-control" placeholder="Id" />
+            </div>
+
+            <div class="form-group">
+                <label for="name">Name</label>
+                <InputText id="name" @bind-Value="@user.Name" class="form-control" placeholder="Name" />
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <InputText id="email" @bind-Value="@user.Email" class="form-control" placeholder="Email" />
+            </div>
+
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary">Add User</button>
+            </div>
+        </div>
+    </EditForm>
+}
+
+@code {
+
+    [Parameter]
+    public string userjson { get; set; }
+
+    User user = new User();
+    int id;
+    string name;
+
+    protected override void OnInitialized()
+    {
+        if (userjson != null)
+        {
+            string encodedUserJson = Uri.UnescapeDataString(userjson);
+            string decodedUserJson = Encoding.UTF8.GetString(Convert.FromBase64String(encodedUserJson));
+            user = System.Text.Json.JsonSerializer.Deserialize<User>(decodedUserJson);
+            id = user.Id;
+            name = user.Name;
+        }
+    }
+
+    public void AddUsers()
+    {
+        userservices.CreateUser(user.Id, user);
+        NavigationManager.NavigateTo("/userlist");
+        user = new User();
+    }
+
+    public void Updateusers()
+    {
+        userservices.UpdateUser(id, name, user);
+        NavigationManager.NavigateTo("/userlist");
+    }
+}
